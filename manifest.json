@@ -1,0 +1,17 @@
+{
+    "name": "Tastefood - The Best Restaurant",
+    "short_name": "IFly",
+    "description": "IFly - Online Ticket Booking",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#3D90E3",
+    "theme_color": "#3D90E3",
+     "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
