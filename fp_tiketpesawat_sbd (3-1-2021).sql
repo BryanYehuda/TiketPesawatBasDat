@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Waktu pembuatan: 03 Jan 2021 pada 12.39
+-- Waktu pembuatan: 12 Jan 2021 pada 08.16
 -- Versi server: 10.4.10-MariaDB
 -- Versi PHP: 7.3.12
 
@@ -21,6 +21,76 @@ SET time_zone = "+00:00";
 --
 -- Database: `fp_tiketpesawat_sbd`
 --
+
+DELIMITER $$
+--
+-- Prosedur
+--
+DROP PROCEDURE IF EXISTS `getCekKursi`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getCekKursi` ()  NO SQL
+select id_pesawat,
+   SUM(CASE WHEN status_kursi=1 then 1 else 0 end) Dipesan,
+   SUM(CASE WHEN status_kursi=0 then 1 else 0 end) Belum
+from kursi_pesawat
+group by id_pesawat$$
+
+DROP PROCEDURE IF EXISTS `getFiturKelas`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getFiturKelas` ()  NO SQL
+SELECT COUNT(id_tipe_kursi), id_tipe_kursi,
+CASE
+    WHEN id_tipe_kursi = 3 THEN 'Business Class'
+    WHEN id_tipe_kursi = 2 THEN 'Ekskulisf'
+    WHEN id_tipe_kursi = 1 THEN 'Ekonomi'
+    ELSE 'Duduk di Bagasi'
+END AS Keterangan,
+CASE
+    WHEN id_tipe_kursi = 3 THEN '795'
+    WHEN id_tipe_kursi = 2 THEN '423'
+    WHEN id_tipe_kursi = 1 THEN '333'
+    ELSE 'Berubah sewaktu waktu'
+END AS Harga
+FROM kursi_pesawat GROUP BY id_tipe_kursi$$
+
+DROP PROCEDURE IF EXISTS `getKelasSafety`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getKelasSafety` ()  NO SQL
+SELECT nama,id_kelas_safety,
+CASE
+    WHEN id_kelas_safety = 1 THEN 'Memerlukan'
+    WHEN id_kelas_safety = 0 THEN 'Tidak Memerlukan'
+END AS KelasSafety
+FROM pelanggan$$
+
+DROP PROCEDURE IF EXISTS `getStatusDanLamaPenerbangan`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getStatusDanLamaPenerbangan` ()  NO SQL
+SELECT id_penerbangan AS NomorPenerbangan,lama_penerbangan AS LamaPenerbangan,
+CASE
+	WHEN CURRENT_TIMESTAMP < waktu_berangkat THEN 'Belum Take Off'
+    WHEN CURRENT_TIMESTAMP > waktu_tiba THEN 'Telah Mendarat'
+    ELSE 'Sedang Terbang'
+END AS StatusPenerbangan
+FROM penerbangan
+ORDER by id_penerbangan$$
+
+DROP PROCEDURE IF EXISTS `getStatusPelanggan`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getStatusPelanggan` ()  NO SQL
+SELECT nama,id_status_pelanggan,
+CASE
+    WHEN id_status_pelanggan = 1 THEN 'Balita'
+    WHEN id_status_pelanggan = 2 THEN 'Reguler'
+    ELSE 'Lansia'
+END AS StatusPelanggan
+FROM pelanggan$$
+
+DROP PROCEDURE IF EXISTS `getSuket`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getSuket` ()  NO SQL
+SELECT id_pelanggan, nama, suket_covid,
+CASE
+    WHEN suket_covid IS NULL THEN 'Belum Upload'
+    WHEN suket_covid IS NOT NULL THEN 'Sudah Upload'
+END AS Keterangan
+FROM pelanggan$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -156,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `kelas_safety` (
 
 INSERT INTO `kelas_safety` (`id_kelas_safety`, `kelas_safety`) VALUES
 (1, 'Butuh'),
-(2, 'Tidak Butuh');
+(0, 'Tidak Butuh');
 
 -- --------------------------------------------------------
 
@@ -181,22 +251,22 @@ INSERT INTO `kursi_pesawat` (`id_kursi`, `id_pesawat`, `id_tipe_kursi`, `status_
 (1, 3, 1, 0),
 (2, 2, 2, 1),
 (3, 1, 3, 0),
-(4, 5, 5, 0),
-(5, 4, 4, 1),
+(4, 5, 1, 0),
+(5, 4, 1, 1),
 (36, 3, 1, 1),
 (37, 2, 2, 1),
 (38, 1, 3, 1),
-(39, 5, 5, 0),
-(40, 4, 4, 0),
+(39, 5, 2, 0),
+(40, 4, 3, 0),
 (41, 2, 2, 1),
 (42, 3, 3, 1),
-(43, 1, 5, 1),
-(44, 5, 4, 0),
+(43, 1, 2, 1),
+(44, 5, 1, 0),
 (45, 4, 1, 1),
 (46, 3, 2, 0),
 (47, 2, 3, 1),
-(48, 1, 4, 0),
-(49, 5, 5, 0),
+(48, 1, 2, 0),
+(49, 5, 3, 0),
 (50, 4, 1, 1),
 (51, 4, 1, 0),
 (52, 4, 1, 1),
@@ -303,26 +373,26 @@ CREATE TABLE IF NOT EXISTS `pelanggan` (
 --
 
 INSERT INTO `pelanggan` (`id_pelanggan`, `id_status_pelanggan`, `id_kelas_safety`, `nama`, `tgl_lahir`, `jenis_kelamin`, `umur`, `kewarganegaraan`, `email`, `nomor_ktp`, `no_hp`, `alamat`, `pekerjaan`, `suket_covid`) VALUES
-(1, 'Dewasa', 0, 'Shaladen', '1994-03-05 21:46:36', '', 26, 'IND', 'shaladen@example.org', '1348574485236', '1-721-097-524', 'Kediri', 'Peternak', 'surat1.png'),
-(2, 'Dewasa', 1, 'Beye', '1975-10-06 08:45:26', '', 45, 'GER', 'khoder@example.net', '7286329336966', '668-442-6169x', 'Surabaya', 'Makelar', 'surat2.pdf'),
-(3, 'Lansia', 1, 'Pak Andri', '1959-12-12 22:51:29', '', 61, 'USA', 'AndriLoveJanda@example.org', '1703977286666', '01692518520', 'Tulungagung', 'Penggoda Wanita', 'surat3.jpg'),
-(4, 'Dewasa', 0, 'Prima', '1983-09-06 17:15:18', '', 37, 'INA', 'ngakakabiezzz@example.com', '0492958561946', '(368)474-9979', 'Banyuwangi', 'Internet Buzzer', 'surat4.pdf'),
-(5, 'Balita', 1, 'Shavica', '2016-07-20 01:50:27', '', 4, 'JPN', 'FPBagaiKuda@example.com', '7502068896180', '1-022-240-468', 'Riau', 'Joki Final Project', 'surat5.png'),
-(36, 'Dewasa', 0, 'Fischl', '1990-12-31 14:05:58', '', 30, 'GER', 'fischl@admin.com', '007201222970', '085233150035', 'Munchen', 'Intel', 'surat36.pdf'),
-(37, 'Dewasa', 0, 'Lumine', '1997-12-31 14:05:58', '', 23, 'INA', 'lumine@example.com', '007201222971', '085233150034', 'Surabaya', 'Traveller', 'surat37.pdf'),
-(38, 'Dewasa', 0, 'Tartaglia', '0000-00-00 00:00:00', '', 27, 'INA', 'childetar@example.com', '007201222972', '08123413038', 'Surabaya', 'Pengusaha', 'surat38.pdf'),
-(39, 'Lansia', 0, 'Madame Ping', '1960-12-01 19:14:46', '', 60, 'CHN', 'pingping@example.com', '007201222973', '08233155435', 'Liyue', 'Penjual Teh', 'surat39.pdf'),
-(40, 'Dewasa', 0, 'Sara', '1999-11-08 19:14:46', '', 21, 'INA', 'sara@example.com', '088201222973', '08122445578', 'Sidoarjo', 'Waitress', 'surat41.pdf'),
-(41, 'Dewasa', 1, 'Diana', '2017-08-03 19:14:46', '', 3, 'INA', 'diana@example.com', '088721222973', '088731456789', 'Sidoarjo', '', 'surat41.pdf'),
-(42, 'Lansia', 0, 'Thomas', '1970-12-13 19:14:46', '', 60, 'JPN', 'thomas@example.com', '008712222971', '0852237890', 'Tokyo', 'karyawan', 'surat42@example.com'),
-(43, 'Dewasa', 1, 'lisa', '1999-12-10 19:14:46', '', 21, 'INA', 'lisa@example.com', '078721222987', '082331567008', 'Kediri', 'mahasiswa', 'surat43.pdf'),
-(44, 'Dewasa', 0, 'Pedro', '2000-01-31 19:14:46', '', 20, 'INA', 'pedro@example.com', '012798099221', '082142944333', 'Semarang', 'karyawan', 'surat44.pdf'),
-(45, 'Dewasa', 0, 'windi', '1999-12-28 19:14:46', '', 21, 'INA', 'windi@gmai.com', '092198099802', '083312556780', 'Kediri', 'Karyawan', 'surat45.pdf'),
-(46, 'Lansia', 1, 'Signora', '1970-12-31 19:14:46', '', 60, 'GER', 'signora@example.com', '072198099998', '085233140045', 'Muchen', '', 'surat46.pdf'),
-(47, 'Balita', 1, 'Klee', '2019-12-01 19:14:46', '', 1, 'INA', 'klee@example.com', '0621980999870', '08923315004', 'Surabaya', '', 'surat47.pdf'),
-(48, 'Dewasa', 1, 'Fany', '2001-12-09 19:14:46', '', 19, 'INA', 'fany@example.com', '051798099801', '085233150032', 'Mojokerto', 'Guru', 'surat48.pdf'),
-(49, 'Dewasa', 1, 'Rika', '1998-07-22 19:14:46', '', 22, 'INA', 'rika@example.com', '012798099801', '08521789088', 'Gresik', 'karyawan', 'surat49.pdf'),
-(50, 'Dewasa', 0, 'Hutao', '1998-01-22 19:14:46', '', 22, 'JPN', 'hutao@example.com', '7502068898870', '085211346780', 'Tokyo', 'Konsultan', 'surat50.pdf'),
+(1, '2', 0, 'Shaladen', '1994-03-05 21:46:36', '', 26, 'IND', 'shaladen@example.org', '1348574485236', '1-721-097-524', 'Kediri', 'Peternak', 'surat1.png'),
+(2, '2', 1, 'Beye', '1975-10-06 08:45:26', '', 45, 'GER', 'khoder@example.net', '7286329336966', '668-442-6169x', 'Surabaya', 'Makelar', 'surat2.pdf'),
+(3, '3', 1, 'Pak Andri', '1959-12-12 22:51:29', '', 61, 'USA', 'AndriLoveJanda@example.org', '1703977286666', '01692518520', 'Tulungagung', 'Penggoda Wanita', 'surat3.jpg'),
+(4, '2', 0, 'Prima', '1983-09-06 17:15:18', '', 37, 'INA', 'ngakakabiezzz@example.com', '0492958561946', '(368)474-9979', 'Banyuwangi', 'Internet Buzzer', 'surat4.pdf'),
+(5, '1', 1, 'Shavica', '2016-07-20 01:50:27', '', 4, 'JPN', 'FPBagaiKuda@example.com', '7502068896180', '1-022-240-468', 'Riau', 'Joki Final Project', 'surat5.png'),
+(36, '2', 0, 'Fischl', '1990-12-31 14:05:58', '', 30, 'GER', 'fischl@admin.com', '007201222970', '085233150035', 'Munchen', 'Intel', 'surat36.pdf'),
+(37, '2', 0, 'Lumine', '1997-12-31 14:05:58', '', 23, 'INA', 'lumine@example.com', '007201222971', '085233150034', 'Surabaya', 'Traveller', 'surat37.pdf'),
+(38, '2', 0, 'Tartaglia', '0000-00-00 00:00:00', '', 27, 'INA', 'childetar@example.com', '007201222972', '08123413038', 'Surabaya', 'Pengusaha', 'surat38.pdf'),
+(39, '3', 0, 'Madame Ping', '1960-12-01 19:14:46', '', 60, 'CHN', 'pingping@example.com', '007201222973', '08233155435', 'Liyue', 'Penjual Teh', 'surat39.pdf'),
+(40, '2', 0, 'Sara', '1999-11-08 19:14:46', '', 21, 'INA', 'sara@example.com', '088201222973', '08122445578', 'Sidoarjo', 'Waitress', 'surat41.pdf'),
+(41, '2', 1, 'Diana', '2017-08-03 19:14:46', '', 3, 'INA', 'diana@example.com', '088721222973', '088731456789', 'Sidoarjo', '', 'surat41.pdf'),
+(42, '3', 0, 'Thomas', '1970-12-13 19:14:46', '', 60, 'JPN', 'thomas@example.com', '008712222971', '0852237890', 'Tokyo', 'karyawan', 'surat42@example.com'),
+(43, '2', 1, 'lisa', '1999-12-10 19:14:46', '', 21, 'INA', 'lisa@example.com', '078721222987', '082331567008', 'Kediri', 'mahasiswa', 'surat43.pdf'),
+(44, '2', 0, 'Pedro', '2000-01-31 19:14:46', '', 20, 'INA', 'pedro@example.com', '012798099221', '082142944333', 'Semarang', 'karyawan', 'surat44.pdf'),
+(45, '2', 0, 'windi', '1999-12-28 19:14:46', '', 21, 'INA', 'windi@gmai.com', '092198099802', '083312556780', 'Kediri', 'Karyawan', 'surat45.pdf'),
+(46, '3', 1, 'Signora', '1970-12-31 19:14:46', '', 60, 'GER', 'signora@example.com', '072198099998', '085233140045', 'Muchen', '', 'surat46.pdf'),
+(47, '1', 1, 'Klee', '2019-12-01 19:14:46', '', 1, 'INA', 'klee@example.com', '0621980999870', '08923315004', 'Surabaya', '', 'surat47.pdf'),
+(48, '2', 1, 'Fany', '2001-12-09 19:14:46', '', 19, 'INA', 'fany@example.com', '051798099801', '085233150032', 'Mojokerto', 'Guru', 'surat48.pdf'),
+(49, '2', 1, 'Rika', '1998-07-22 19:14:46', '', 22, 'INA', 'rika@example.com', '012798099801', '08521789088', 'Gresik', 'karyawan', 'surat49.pdf'),
+(50, '2', 0, 'Hutao', '1998-01-22 19:14:46', '', 22, 'JPN', 'hutao@example.com', '7502068898870', '085211346780', 'Tokyo', 'Konsultan', 'surat50.pdf'),
 (51, '1', 0, 'Samsul Guardian', '2018-03-05 21:46:36', '', 2, 'IND', 'samsul@example.org', '1348574485236', '089745820108', 'Timika', 'Pelajar', 'surat1.png'),
 (52, '1', 1, 'Bambang Wizard', '2015-10-06 08:45:26', '', 5, 'GER', 'bambang@example.net', '7286329336966', '081975368229', 'Biak', 'Tunawisma', 'surat2.pdf'),
 (53, '2', 1, 'Malik Healer', '1959-12-12 22:51:29', '', 61, 'USA', 'malik@example.org', '1703977286666', '087632195305', 'Jayapura', 'Pengusaha', 'surat3.jpg'),
@@ -478,26 +548,26 @@ CREATE TABLE IF NOT EXISTS `penerbangan` (
 --
 
 INSERT INTO `penerbangan` (`id_penerbangan`, `id_pesawat`, `id_bandara_asal`, `id_bandara_tujuan`, `id_kursi`, `waktu_berangkat`, `waktu_tiba`, `lama_penerbangan`) VALUES
-(1, 2, 3, 1, 5, '2020-02-26 06:08:30', '2020-02-26 16:02:14', '02:09:47'),
-(2, 3, 4, 2, 4, '2020-07-16 07:53:21', '2020-07-16 21:27:19', '03:09:47'),
-(3, 1, 5, 3, 3, '2020-09-18 16:51:57', '2020-09-18 20:49:45', '04:09:47'),
-(4, 4, 1, 4, 2, '2020-01-16 18:53:34', '2020-01-16 20:56:33', '05:09:47'),
-(5, 5, 2, 5, 1, '2020-03-11 04:39:53', '2020-03-11 09:06:36', '06:09:47'),
-(36, 3, 1, 2, 36, '2021-01-08 16:43:30', '2021-01-08 17:43:30', '00:00:01'),
-(37, 3, 2, 3, 37, '2021-01-08 16:43:30', '2021-01-08 17:30:30', '00:00:00'),
-(38, 3, 1, 2, 38, '2021-01-15 12:00:00', '2021-01-15 13:00:00', '00:00:01'),
-(39, 3, 2, 38, 39, '2021-01-15 12:00:00', '2021-01-15 16:00:00', '00:00:04'),
-(40, 3, 38, 43, 40, '2021-01-15 12:00:00', '2021-01-15 13:00:00', '00:00:01'),
-(41, 3, 41, 40, 41, '2021-01-15 12:00:00', '2021-01-15 12:45:00', '00:00:00'),
-(42, 3, 2, 1, 42, '2021-01-20 17:00:00', '2021-01-20 18:00:00', '00:00:01'),
-(43, 3, 48, 41, 43, '2021-01-20 17:00:00', '2021-01-20 18:00:00', '00:00:01'),
-(44, 3, 36, 50, 44, '2021-01-20 13:00:00', '2021-01-20 15:00:00', '00:00:02'),
-(45, 3, 47, 45, 45, '2021-01-20 13:00:00', '2021-01-20 16:00:00', '00:00:03'),
-(46, 3, 37, 42, 46, '2021-01-20 13:00:00', '2021-01-20 17:00:00', '00:00:04'),
-(47, 3, 42, 43, 47, '2021-01-28 10:00:00', '2021-01-28 12:00:00', '00:00:02'),
-(48, 3, 46, 47, 48, '2021-01-20 20:00:00', '2021-02-20 00:00:00', '00:00:04'),
-(49, 3, 5, 2, 49, '2021-01-20 18:00:00', '2021-01-20 20:00:00', '00:00:02'),
-(50, 3, 1, 2, 50, '2021-01-20 18:00:00', '2021-01-20 19:00:00', '00:00:01'),
+(1, 2, 3, 1, 5, '2021-01-11 00:00:00', '2021-01-11 23:00:00', '23:00:00'),
+(2, 3, 4, 2, 4, '2021-01-11 07:53:21', '2021-01-11 21:27:19', '13:33:58'),
+(3, 1, 5, 3, 3, '2020-09-18 16:51:57', '2020-09-18 20:49:45', '03:57:48'),
+(4, 4, 1, 4, 2, '2020-01-16 18:53:34', '2020-01-16 20:56:33', '02:02:59'),
+(5, 5, 2, 5, 1, '2020-03-11 04:39:53', '2020-03-11 09:06:36', '04:26:43'),
+(36, 3, 1, 2, 36, '2021-01-08 16:43:30', '2021-01-08 17:43:30', '01:00:00'),
+(37, 3, 2, 3, 37, '2021-01-08 16:43:30', '2021-01-08 17:30:30', '00:47:00'),
+(38, 3, 1, 2, 38, '2021-01-15 12:00:00', '2021-01-15 13:00:00', '01:00:00'),
+(39, 3, 2, 38, 39, '2021-01-15 12:00:00', '2021-01-15 16:00:00', '04:00:00'),
+(40, 3, 38, 43, 40, '2021-01-15 12:00:00', '2021-01-15 13:00:00', '01:00:00'),
+(41, 3, 41, 40, 41, '2021-01-15 12:00:00', '2021-01-15 12:45:00', '00:45:00'),
+(42, 3, 2, 1, 42, '2021-01-20 17:00:00', '2021-01-20 18:00:00', '01:00:00'),
+(43, 3, 48, 41, 43, '2021-01-20 17:00:00', '2021-01-20 18:00:00', '01:00:00'),
+(44, 3, 36, 50, 44, '2021-01-20 13:00:00', '2021-01-20 15:00:00', '02:00:00'),
+(45, 3, 47, 45, 45, '2021-01-20 13:00:00', '2021-01-20 16:00:00', '03:00:00'),
+(46, 3, 37, 42, 46, '2021-01-20 13:00:00', '2021-01-20 17:00:00', '04:00:00'),
+(47, 3, 42, 43, 47, '2021-01-28 10:00:00', '2021-01-28 12:00:00', '02:00:00'),
+(48, 3, 46, 47, 48, '2021-01-20 00:00:00', '2021-01-20 10:00:00', '10:00:00'),
+(49, 3, 5, 2, 49, '2021-01-20 18:00:00', '2021-01-20 20:00:00', '02:00:00'),
+(50, 3, 1, 2, 50, '2021-01-20 18:00:00', '2021-01-20 19:00:00', '01:00:00'),
 (51, 4, 64, 62, 51, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
 (52, 4, 64, 62, 52, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
 (53, 4, 64, 62, 53, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
@@ -513,36 +583,36 @@ INSERT INTO `penerbangan` (`id_penerbangan`, `id_pesawat`, `id_bandara_asal`, `i
 (63, 4, 64, 62, 63, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
 (64, 4, 64, 62, 64, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
 (65, 4, 64, 62, 65, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(6, 1, 6, 12, 6, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(7, 1, 6, 12, 7, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(8, 1, 6, 12, 8, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(9, 1, 6, 12, 9, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(10, 1, 6, 12, 10, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(11, 1, 6, 12, 11, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(12, 1, 6, 12, 12, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(13, 1, 6, 12, 13, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(14, 1, 6, 12, 14, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(15, 1, 6, 12, 15, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(16, 1, 6, 12, 16, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(17, 1, 6, 12, 17, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(18, 1, 6, 12, 18, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(19, 1, 6, 12, 19, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(20, 1, 6, 12, 20, '2020-12-19 09:10:00', '2020-12-19 14:12:00', '05:02:00'),
-(25, 2, 26, 21, 25, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(21, 2, 26, 21, 21, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(24, 2, 26, 21, 24, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(23, 2, 26, 21, 23, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(22, 2, 26, 21, 22, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(26, 2, 26, 21, 26, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(27, 2, 26, 21, 27, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(28, 2, 26, 21, 28, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(29, 2, 26, 21, 29, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(30, 2, 26, 21, 30, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(31, 2, 26, 21, 31, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(32, 2, 26, 21, 32, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(33, 2, 26, 21, 33, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(34, 2, 26, 21, 34, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00'),
-(35, 2, 26, 21, 35, '2020-12-31 07:00:00', '2020-12-31 12:00:00', '05:00:00');
+(6, 1, 6, 12, 6, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(7, 1, 6, 12, 7, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(8, 1, 6, 12, 8, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(9, 1, 6, 12, 9, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(10, 1, 6, 12, 10, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(11, 1, 6, 12, 11, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(12, 1, 6, 12, 12, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(13, 1, 6, 12, 13, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(14, 1, 6, 12, 14, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(15, 1, 6, 12, 15, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(16, 1, 6, 12, 16, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(17, 1, 6, 12, 17, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(18, 1, 6, 12, 18, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(19, 1, 6, 12, 19, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(20, 1, 6, 12, 20, '2020-12-19 04:10:00', '2020-12-19 14:12:00', '10:02:00'),
+(25, 2, 26, 21, 25, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(21, 2, 26, 21, 21, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(24, 2, 26, 21, 24, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(23, 2, 26, 21, 23, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(22, 2, 26, 21, 22, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(26, 2, 26, 21, 26, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(27, 2, 26, 21, 27, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(28, 2, 26, 21, 28, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(29, 2, 26, 21, 29, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(30, 2, 26, 21, 30, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(31, 2, 26, 21, 31, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(32, 2, 26, 21, 32, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(33, 2, 26, 21, 33, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(34, 2, 26, 21, 34, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00'),
+(35, 2, 26, 21, 35, '2020-12-31 04:00:00', '2020-12-31 12:00:00', '08:00:00');
 
 -- --------------------------------------------------------
 
@@ -681,7 +751,7 @@ INSERT INTO `status_kedatangan` (`id_status_kedatangan`, `id_pelanggan`, `id_pen
 DROP TABLE IF EXISTS `status_pelanggan`;
 CREATE TABLE IF NOT EXISTS `status_pelanggan` (
   `id_status_pelanggan` int(11) NOT NULL AUTO_INCREMENT,
-  `status_pelanggan` varchar(10) NOT NULL,
+  `statusPelanggan` varchar(10) NOT NULL,
   PRIMARY KEY (`id_status_pelanggan`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
@@ -689,9 +759,9 @@ CREATE TABLE IF NOT EXISTS `status_pelanggan` (
 -- Dumping data untuk tabel `status_pelanggan`
 --
 
-INSERT INTO `status_pelanggan` (`id_status_pelanggan`, `status_pelanggan`) VALUES
+INSERT INTO `status_pelanggan` (`id_status_pelanggan`, `statusPelanggan`) VALUES
 (1, 'Balita'),
-(2, 'Dewasa'),
+(2, 'Reguler'),
 (3, 'Lansia');
 
 -- --------------------------------------------------------
@@ -716,6 +786,27 @@ INSERT INTO `tipe_kursi` (`id_tipe_kursi`, `id_fitur`, `harga`) VALUES
 (3, '3', 333),
 (2, '2', 423),
 (1, '1', 795);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in struktur untuk tampilan `viewlamapenerbangan`
+-- (Lihat di bawah untuk tampilan aktual)
+--
+DROP VIEW IF EXISTS `viewlamapenerbangan`;
+CREATE TABLE IF NOT EXISTS `viewlamapenerbangan` (
+`id_penerbangan` int(11)
+,`lama_penerbangan` time
+);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur untuk view `viewlamapenerbangan`
+--
+DROP TABLE IF EXISTS `viewlamapenerbangan`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `viewlamapenerbangan`  AS  select `penerbangan`.`id_penerbangan` AS `id_penerbangan`,`penerbangan`.`lama_penerbangan` AS `lama_penerbangan` from `penerbangan` ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
