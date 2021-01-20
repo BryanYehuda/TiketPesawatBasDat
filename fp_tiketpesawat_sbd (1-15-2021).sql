@@ -27,7 +27,7 @@ DELIMITER $$
 -- Prosedur
 --
 DROP PROCEDURE IF EXISTS `getCekKursi`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `getCekKursi` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getCekKursi` ()  NO SQL
 select id_pesawat,
    SUM(CASE WHEN status_kursi=1 then 1 else 0 end) Dipesan,
    SUM(CASE WHEN status_kursi=0 then 1 else 0 end) Belum
@@ -35,7 +35,7 @@ from kursi_pesawat
 group by id_pesawat$$
 
 DROP PROCEDURE IF EXISTS `getKelasSafety`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `getKelasSafety` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getKelasSafety` ()  NO SQL
 SELECT nama,id_kelas_safety,
 CASE
     WHEN id_kelas_safety = 1 THEN 'Memerlukan'
@@ -44,7 +44,7 @@ END AS KelasSafety
 FROM pelanggan$$
 
 DROP PROCEDURE IF EXISTS `getStatusPelanggan`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `getStatusPelanggan` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getStatusPelanggan` ()  NO SQL
 SELECT nama,id_status_pelanggan,
 CASE
     WHEN id_status_pelanggan = 1 THEN 'Balita'
@@ -54,7 +54,7 @@ END AS StatusPelanggan
 FROM pelanggan$$
 
 DROP PROCEDURE IF EXISTS `getSuket`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `getSuket` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getSuket` ()  NO SQL
 SELECT id_pelanggan, nama, suket_covid,
 CASE
     WHEN suket_covid IS NULL THEN 'Belum Upload'
@@ -64,7 +64,7 @@ FROM pelanggan
 ORDER BY id_pelanggan$$
 
 DROP PROCEDURE IF EXISTS `get_status_kedatangan`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `get_status_kedatangan` (IN `no_paspor_pm` VARCHAR(15), IN `alamat_di_indo_pm` VARCHAR(50), IN `hewan_tumbuhan_pm` TINYINT(4), IN `narkoba_sajam_pm` TINYINT(4), IN `uang_1000_pm` TINYINT(4), IN `rokok_25batang_pm` TINYINT(4), IN `barang_dagangan_pm` TINYINT(4), IN `miras_pm` TINYINT(4), IN `idd` INT)  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_status_kedatangan` (IN `no_paspor_pm` VARCHAR(15), IN `alamat_di_indo_pm` VARCHAR(50), IN `hewan_tumbuhan_pm` TINYINT(4), IN `narkoba_sajam_pm` TINYINT(4), IN `uang_1000_pm` TINYINT(4), IN `rokok_25batang_pm` TINYINT(4), IN `barang_dagangan_pm` TINYINT(4), IN `miras_pm` TINYINT(4), IN `idd` INT)  NO SQL
 UPDATE status_kedatangan SET
 no_paspor = no_paspor_pm,
 alamat_di_indo = alamat_di_indo_pm , 
@@ -77,7 +77,7 @@ miras = miras_pm
 WHERE id_status_kedatangan = idd$$
 
 DROP PROCEDURE IF EXISTS `order`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `order` (IN `id_status_pelanggan_pm` TINYINT(4), IN `id_kelas_safety_pm` TINYINT(4), IN `nama_pm` VARCHAR(50), IN `tgl_lahir_pm` DATETIME, IN `jenis_kelamin_pm` VARCHAR(50), IN `umur_pm` TINYINT(2), IN `kewarganegaraan_pm` VARCHAR(20), IN `nomor_ktp_pm` VARCHAR(16), IN `no_hp_pm` VARCHAR(13), IN `alamat_pm` VARCHAR(150), IN `pekerjaan_pm` VARCHAR(25), IN `suket_covid_pm` VARCHAR(50), IN `idd` INT)  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `order` (IN `id_status_pelanggan_pm` TINYINT(4), IN `id_kelas_safety_pm` TINYINT(4), IN `nama_pm` VARCHAR(50), IN `tgl_lahir_pm` DATETIME, IN `jenis_kelamin_pm` VARCHAR(50), IN `umur_pm` TINYINT(2), IN `kewarganegaraan_pm` VARCHAR(20), IN `nomor_ktp_pm` VARCHAR(16), IN `no_hp_pm` VARCHAR(13), IN `alamat_pm` VARCHAR(150), IN `pekerjaan_pm` VARCHAR(25), IN `suket_covid_pm` VARCHAR(50), IN `idd` INT)  NO SQL
 UPDATE pelanggan SET
 id_status_pelanggan = id_status_pelanggan_pm,
 id_kelas_safety = id_kelas_safety_pm , 
@@ -94,7 +94,7 @@ suket_covid = suket_covid_pm
 WHERE id_pelanggan = idd$$
 
 DROP PROCEDURE IF EXISTS `register`$$
-CREATE DEFINER=`iflymyid_user`@`localhost` PROCEDURE `register` (IN `email_nya` VARCHAR(256), IN `username_nya` VARCHAR(128), IN `password_nya` VARCHAR(128))  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `register` (IN `email_nya` VARCHAR(256), IN `username_nya` VARCHAR(128), IN `password_nya` VARCHAR(128))  NO SQL
 INSERT INTO users (email,username,password)
 VALUES (email_nya, username_nya, password_nya)$$
 
@@ -983,7 +983,7 @@ CREATE TABLE IF NOT EXISTS `viewstatuspenerbangan` (
 --
 DROP TABLE IF EXISTS `cekkursi`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFINER VIEW `cekkursi`  AS  select `kursi_pesawat`.`id_pesawat` AS `id_pesawat`,sum(case when `kursi_pesawat`.`status_kursi` = 1 then 1 else 0 end) AS `Dipesan`,sum(case when `kursi_pesawat`.`status_kursi` = 0 then 1 else 0 end) AS `Belum` from `kursi_pesawat` group by `kursi_pesawat`.`id_pesawat` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `cekkursi`  AS  select `kursi_pesawat`.`id_pesawat` AS `id_pesawat`,sum(case when `kursi_pesawat`.`status_kursi` = 1 then 1 else 0 end) AS `Dipesan`,sum(case when `kursi_pesawat`.`status_kursi` = 0 then 1 else 0 end) AS `Belum` from `kursi_pesawat` group by `kursi_pesawat`.`id_pesawat` ;
 
 -- --------------------------------------------------------
 
@@ -992,7 +992,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFI
 --
 DROP TABLE IF EXISTS `viewfiturekelas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFINER VIEW `viewfiturekelas`  AS  select `tipe_kursi`.`id_tipe_kursi` AS `id_tipe_kursi`,`tipe_kursi`.`harga` AS `harga`,`tipe_kursi`.`id_fitur` AS `id_fitur`,`fitur`.`kursi` AS `kursi`,`fitur`.`ukuran_tv` AS `ukuran_tv`,`fitur`.`kualitas_tv` AS `kualitas_tv`,`fitur`.`snack` AS `snack`,`fitur`.`makanan` AS `makanan`,`fitur`.`free_flow` AS `free_flow`,`fitur`.`tempat_tidur` AS `tempat_tidur`,`fitur`.`penjemputan_bagasi` AS `penjemputan_bagasi`,`fitur`.`priority_checkin` AS `priority_checkin` from (`tipe_kursi` left join `fitur` on(`tipe_kursi`.`id_fitur` = `fitur`.`id_fitur`)) group by `tipe_kursi`.`id_tipe_kursi` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `viewfiturekelas`  AS  select `tipe_kursi`.`id_tipe_kursi` AS `id_tipe_kursi`,`tipe_kursi`.`harga` AS `harga`,`tipe_kursi`.`id_fitur` AS `id_fitur`,`fitur`.`kursi` AS `kursi`,`fitur`.`ukuran_tv` AS `ukuran_tv`,`fitur`.`kualitas_tv` AS `kualitas_tv`,`fitur`.`snack` AS `snack`,`fitur`.`makanan` AS `makanan`,`fitur`.`free_flow` AS `free_flow`,`fitur`.`tempat_tidur` AS `tempat_tidur`,`fitur`.`penjemputan_bagasi` AS `penjemputan_bagasi`,`fitur`.`priority_checkin` AS `priority_checkin` from (`tipe_kursi` left join `fitur` on(`tipe_kursi`.`id_fitur` = `fitur`.`id_fitur`)) group by `tipe_kursi`.`id_tipe_kursi` ;
 
 -- --------------------------------------------------------
 
@@ -1001,7 +1001,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFI
 --
 DROP TABLE IF EXISTS `viewpemesanan`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFINER VIEW `viewpemesanan`  AS  select `bandara`.`nama_bandara` AS `nama_bandara`,`bandara`.`lokasi` AS `lokasi`,`penerbangan`.`waktu_berangkat` AS `waktu_berangkat` from (`bandara` left join `penerbangan` on(`bandara`.`id_bandara` = `penerbangan`.`id_bandara_tujuan`)) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `viewpemesanan`  AS  select `bandara`.`nama_bandara` AS `nama_bandara`,`bandara`.`lokasi` AS `lokasi`,`penerbangan`.`waktu_berangkat` AS `waktu_berangkat` from (`bandara` left join `penerbangan` on(`bandara`.`id_bandara` = `penerbangan`.`id_bandara_tujuan`)) ;
 
 -- --------------------------------------------------------
 
@@ -1010,7 +1010,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFI
 --
 DROP TABLE IF EXISTS `viewstatusdanlamapenerbangan`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFINER VIEW `viewstatusdanlamapenerbangan`  AS  select `penerbangan`.`id_penerbangan` AS `NomorPenerbangan`,`penerbangan`.`lama_penerbangan` AS `LamaPenerbangan`,case when current_timestamp() < `penerbangan`.`waktu_berangkat` then 'Belum Berangkat' when current_timestamp() > `penerbangan`.`waktu_tiba` then 'Telah Mendarat' else 'Masih Mengudara' end AS `StatusPenerbangan` from `penerbangan` group by `penerbangan`.`id_penerbangan` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `viewstatusdanlamapenerbangan`  AS  select `penerbangan`.`id_penerbangan` AS `NomorPenerbangan`,`penerbangan`.`lama_penerbangan` AS `LamaPenerbangan`,case when current_timestamp() < `penerbangan`.`waktu_berangkat` then 'Belum Berangkat' when current_timestamp() > `penerbangan`.`waktu_tiba` then 'Telah Mendarat' else 'Masih Mengudara' end AS `StatusPenerbangan` from `penerbangan` group by `penerbangan`.`id_penerbangan` ;
 
 -- --------------------------------------------------------
 
@@ -1019,7 +1019,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFI
 --
 DROP TABLE IF EXISTS `viewstatuspenerbangan`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`iflymyid_user`@`localhost` SQL SECURITY DEFINER VIEW `viewstatuspenerbangan`  AS  select `penerbangan`.`id_penerbangan` AS `NomorPenerbangan`,`penerbangan`.`lama_penerbangan` AS `LamaPenerbangan`,`penerbangan`.`waktu_berangkat` AS `waktu_berangkat`,`penerbangan`.`id_pesawat` AS `id_pesawat`,case when current_timestamp() < `penerbangan`.`waktu_berangkat` then 'Belum Take Off' when current_timestamp() > `penerbangan`.`waktu_tiba` then 'Telah Mendarat' else 'Sedang Terbang' end AS `StatusPenerbangan` from (`penerbangan` join `pesawat` on(`penerbangan`.`id_pesawat` = `pesawat`.`id_pesawat`)) order by `penerbangan`.`id_penerbangan` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `viewstatuspenerbangan`  AS  select `penerbangan`.`id_penerbangan` AS `NomorPenerbangan`,`penerbangan`.`lama_penerbangan` AS `LamaPenerbangan`,`penerbangan`.`waktu_berangkat` AS `waktu_berangkat`,`penerbangan`.`id_pesawat` AS `id_pesawat`,case when current_timestamp() < `penerbangan`.`waktu_berangkat` then 'Belum Take Off' when current_timestamp() > `penerbangan`.`waktu_tiba` then 'Telah Mendarat' else 'Sedang Terbang' end AS `StatusPenerbangan` from (`penerbangan` join `pesawat` on(`penerbangan`.`id_pesawat` = `pesawat`.`id_pesawat`)) order by `penerbangan`.`id_penerbangan` ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
