@@ -1,0 +1,66 @@
+1. Status Penerbangan dan Lama Penerbangan
+
+SELECT id_penerbangan AS NomorPenerbangan,lama_penerbangan AS LamaPenerbangan,
+CASE
+    WHEN CURRENT_TIMESTAMP < waktu_berangkat THEN 'Belum Take Off'
+    WHEN CURRENT_TIMESTAMP > waktu_tiba THEN 'Telah Mendarat'
+    ELSE 'Sedang Terbang'
+END AS StatusPenerbangan
+FROM penerbangan
+ORDER by id_penerbangan
+
+2. Pengecekan Kursi Kosong Pesawat
+
+select id_pesawat,
+   SUM(CASE WHEN status_kursi=1 then 1 else 0 end) Dipesan,
+   SUM(CASE WHEN status_kursi=0 then 1 else 0 end) Belum
+from kursi_pesawat
+group by id_pesawat
+
+3. Fiture tiap kelas
+
+SELECT COUNT(id_tipe_kursi), id_tipe_kursi,
+CASE
+    WHEN id_tipe_kursi = 3 THEN 'Business Class'
+    WHEN id_tipe_kursi = 2 THEN 'Ekskulisf'
+    WHEN id_tipe_kursi = 1 THEN 'Ekonomi'
+    ELSE 'Duduk di Bagasi'
+END AS Keterangan,
+CASE
+    WHEN id_tipe_kursi = 3 THEN '795'
+    WHEN id_tipe_kursi = 2 THEN '423'
+    WHEN id_tipe_kursi = 1 THEN '333'
+    ELSE 'Berubah sewaktu waktu'
+END AS Harga
+FROM kursi_pesawat GROUP BY id_tipe_kursi
+
+4. Penandaan Lansia/Balita di pesawat
+
+SELECT nama,id_status_pelanggan,
+CASE
+    WHEN id_status_pelanggan = 1 THEN 'Balita'
+    WHEN id_status_pelanggan = 2 THEN 'Reguler'
+    ELSE 'Lansia'
+END AS StatusPelanggan
+FROM pelanggan
+
+5. Pengecekan ID dan Surat Covid
+
+SELECT id_pelanggan, nama, suket_covid,
+CASE
+    WHEN suket_covid IS NULL THEN 'Belum Upload'
+    WHEN suket_covid IS NOT NULL THEN 'Sudah Upload'
+END AS Keterangan
+FROM pelanggan
+
+6. SEHARUSNYA DIBUAT DI PHP
+
+7. Kelas Safety
+
+SELECT nama,id_kelas_safety,
+CASE
+    WHEN id_kelas_safety = 1 THEN 'Memerlukan'
+    WHEN id_kelas_safety = 0 THEN 'Tidak Memerlukan'
+END AS KelasSafety
+FROM pelanggan
+
