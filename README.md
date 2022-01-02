@@ -1,4 +1,4 @@
-# TiketPesawatBasDat
+# Tiket Pesawat Basis Data
 
 ## English
 This is a repository for the Final Project for Database Courses with the theme of booking Airline Tickets
